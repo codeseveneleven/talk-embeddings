@@ -1,0 +1,348 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+
+		<title>Embeddings - the lesser known hero of AI</title>
+
+		<link href="dist/reset.css" rel="stylesheet">
+		<link href="dist/reveal.css" rel="stylesheet">
+		<link href="dist/theme/code711.css" rel="stylesheet">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link href="plugin/highlight/monokai.css" rel="stylesheet">
+	</head>
+	<body>
+		<img class="logos7" src="sudhaus7.svg"/>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h1>Embeddings - the lesser known hero of AI</h1>
+					<h4>TYPO3 Developer Days 2024</h4>
+					<h4>Frank Berger</h4>
+				</section>
+				<section>
+					<div class="twocolumn">
+						<div>
+							<h4>A bit about me</h4>
+							<ul>
+								<li>Frank Berger</li>
+								<li>Head of Engineering at sudhaus7.de, a label of the B-Factor GmbH, member of the code711.de network</li>
+								<li>Started as an Unix  Systemadministrator who also develops in 1996</li>
+								<li>Does TYPO3 since 2005</li>
+							</ul>
+						</div>
+						<div>
+							<img src="Frank.jpg"/>
+						</div>
+					</div>
+				</section>
+
+				<section>
+					<h1>What is an Embedding?</h1>
+					<p class="fragment">A point in multi-dimensional space, described by a vector</p>
+					<p class="fragment">Mathematically represent characteristics and meaning of a word, phrase or text</p>
+					<p class="fragment">It encodes both semantic and contextual information</p>
+					<p class="fragment">AI and LLMs enable the creation of embeddings with hundreds or even thousands of dimensions</p>
+				</section>
+
+				<section>
+					<img src="vectors-example.png"/>
+				</section>
+
+				<section>
+					<h2>Why is that cool?</h2>
+					<h2 class="fragment">Because we can do math with it!</h2>
+				</section>
+
+
+				<section>
+					<img src="formula.png"/>
+				</section>
+
+				<section>
+					<h2>Used in most cases: Cosine Distance</h2>
+					<p>Cosine distance is defined as the distance of the angle between two vectors normalized to unit length, ranging from 0 to 2</p>
+					<ul>
+						<li>0 = Synonymous (the same)</li>
+						<li>1 = Orthogonal (no relation)</li>
+						<li>2 = Antonymous (the opposite)</li>
+					</ul>
+					<p class="fragment">the shortest distance win, we assume everything below 0.1 as a very very close match</p>
+				</section>
+
+				<section>
+					<h2>In PHP we calculate it like this:</h2>
+					<pre><code class="hljs" data-line-numbers data-line-numbers data-trim>
+	function distance($a,$b):float
+	{
+		return 1 - (dotp($a,$b) /
+			sqrt(dotp($a,$a) * dotp($b,$b))
+		);
+	}
+	// calculating the dot-product
+	function dotp($a,$b):float
+	{
+		$products = array_map(function($da, $db) {
+			return $da * $db;
+		}, $a, $b);
+		return (float)array_sum($products);
+	}
+					</code></pre>
+					<p class="fragment">This will produce a floating point number between 0 and 2 </p>
+				</section>
+
+				<section>
+					<h2>In our examples we use</h2>
+					<ul>
+						<li>OpenAI's embedding models</li>
+						<li>Model: text-embedding-ada-002</li>
+						<li>(Alternative: text-embedding-3-small)</li>
+						<li>Uses 1536 dimensions</li>
+						<li>Is normalized to unit length (ranged between -1 and 1)</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>How does such an embedding look like?</h2>
+					<p>the word "Queen"</p>
+						<pre><code class="hljs" data-line-numbers data-trim >[-0.0045574773,-0.0067263762,-0.002498418,
+	-0.018243857,-0.01689091,0.010516719,-0.0076504247,
+	-0.024046184,-0.017365139,-0.012818122,0.0145058185,
+	0.022330591,0.014533714,-0.0029691597,-0.018801773,
+	0.008884814,0.043322187,0.021061333,0.029513761,
+	-0.008801127,0.0020712635,0.014136199,-0.005460604,
+	0.003598559,-0.005296716,-0.010230786,0.0072319875,
+	... ,-0.011262931]</code></pre>
+					<p>encoded in 1536 dimensions, capturing meaning, context and relations</p>
+				</section>
+
+				<section>
+					<h2>How do I get an embedding in PHP?</h2>
+					<p>composer req openai-php/client</p>
+					<pre><code class="hljs php" data-line-numbers data-trim>
+function getEmbedding(string $text): array
+{
+	$client = OpenAI::client(getenv('OPENAIKEY'));
+	$result = $client->embeddings()->create([
+		'model'=>'text-embedding-ada-002',
+		'input'=>$text,
+		'encoding_format'=> 'float',
+	]);
+	return $result->toArray()['data'][0]['embedding'];
+}
+					</code></pre>
+					<p class="fragment">Tip: cache the resulting embedding</p>
+				</section>
+
+				<section>
+					<h2>Monarch + Woman = Queen</h2>
+				</section>
+
+				<section>
+					<h2>That's nerdy and cool, but what can we do with it?</h2>
+				</section>
+
+				<!--
+				<section>
+					<h2>Determining the language</h2>
+					<pre><code class="hljs php" data-line-numbers data-trim>
+$test = new Embedding();
+$english = $test->calculateEmbedding( 'english');
+$german  = $test->calculateEmbedding( 'german' );
+$french  = $test->calculateEmbedding( 'french' );
+$text    = $test->calculateEmbedding( $textToTest );
+$result = [
+	'english' => $test->distance( $text, $english ),
+	'german'  => $test->distance( $text, $german  ),
+	'french'  => $test->distance( $text, $french  )
+];
+asort( $result );
+
+printf('"%s" probably is in : %s',
+					$textToTest, array_keys($result)[0]  );
+					</code></pre>
+					<p class="fragment">Problem: it can latch onto certain keywords</p>
+				</section>
+				-->
+				<section>
+					<h2>Checking the quality of translations</h2>
+					<pre><code class="hljs php" data-line-numbers data-trim>
+$embedding = new Embedding();
+
+$text1 = $argv[1];
+$text2 = $argv[2];
+
+$d1 = $embedding->calculateEmbedding($text1);
+$d2 = $embedding->calculateEmbedding($text2);
+$distance = $embedding->distance($d1, $d2);
+
+$rating = $distance > 0.125 ? 'BAD' : 'GOOD';
+
+printf("\n\n%s\n\n%s\n\nDistance: %s\n\nRating: %s\n\n",
+						$text1, $text2, $distance, $rating);
+					</code></pre>
+					<p class="fragment">0.125 is the threshold we defined for us</p>
+				</section>
+
+
+				<section>
+					<h2>Normalize unformatted data</h2>
+					<pre><code class="hljs php" data-line-numbers="|4-6|7-10" data-trim>
+$embedding  = new Embedding();
+$normalizeMe = $argv[1];
+
+$dictionary  = $embedding->generateDictionary([
+	'rock',	'paper', 'scissors', 'lizard', 'spock',
+]);
+$distances = $embedding->calculateDistances(
+	$embedding->calculateEmbedding( $normalizeMe ),
+	$dictionary
+); // already sorted
+
+print_r($distances);
+printf('the Input "%s" is normalized to "%s"'."\n\n\n",
+						$normalizeMe,array_keys($distances)[0]);
+					</code></pre>
+					<p class="fragment">This way we can normalize random data and text to our domain.</p>
+				</section>
+
+				<section>
+					<h2>What about BIAS?</h2>
+					<pre class="fragment "><code class="hljs php" data-line-numbers="|4-7" data-trim>
+$testBias = new Embedding();
+$f_p = $testBias->calculateEmbedding( 'female profession');
+$m_p = $testBias->calculateEmbedding( 'male profession');
+$jobs = [
+	'Doctor',
+	'Nurse', // and more professions
+];
+foreach ($jobs as $job) {
+	$j_e = $testBias->calculateEmbedding($job);
+	$d1 = $testBias->distance( $j_e, $f_p );
+	$d2 = $testBias->distance( $j_e, $m_p );
+	printf("%s is a profession for %s.\n",
+						$job, $d1 < $d2 ? 'WOMEN' : 'MEN');
+}
+					</code></pre>
+					<p class="fragment">Biases are inherent to all AI Models! It always depends on by who and how they are trained!</p>
+				</section>
+
+				<section>
+					<h2>The RAM</h2>
+					<pre class="fragment "><code class="hljs php" data-line-numbers="|4-9" data-trim>
+
+$em = new Embedding();
+$theText = $argv[1];
+
+[$keyword, $distance] = $em->getNearestNeighbour(
+	$em->calculateEmbedding( $theText ),
+	$em->generateDictionary([
+		'truck','computer memory','sheep'
+	])
+);
+
+printf("\n\n\n".'"%s" probably is : %s'."\n\n\n",
+						$theText,$keyword);
+					</code></pre>
+					<p class="fragment">Takeway: Models are trained by nerds!</p>
+					<p class="fragment">Good thing: you can use embeddings to test the bias in your own models!</p>
+				</section>
+
+				<section>
+					<h2>Statistical Analysis - Sentiment or emotion</h2>
+					<pre class="fragment "><code class="hljs php" data-line-numbers data-trim>
+$embedding = new Embedding();
+$rateme     = $argv[1];
+$distances = $embedding->calculateDistances(
+	$embedding->calculateEmbedding( $rateme ),
+	$embedding->generateDictionary( [
+		'joy', 'sadness', 'anger', // ... 120 more emotions
+	])
+);
+$filtered  = array_filter( $distances, function ( $val ) {
+	return $val < 0.25;
+});
+
+printf('The input "%s" carries the sentiments "%s"',
+		$rateme, implode( ', ', array_keys( $filtered ) ) );
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>More fun things you can do with embeddings</h2>
+					<p class="fragment">checking the "mood" - this how Zoom knows how a conference call went</p>
+					<p class="fragment">Input parser for spoken language</p>
+					<p class="fragment">finding similar products (closest neighbour) - as an alternate recommendation based on loose couplings like the order history rather than keywords or categories</p>
+					<p class="fragment">creating a search by "intention" not keyword<br/>or a chat feature based on your database</p>
+				</section>
+
+				<section>
+					<h2>How to store embeddings</h2>
+					<ul>
+						<li class="fragment">Vector Databases
+							<ul>
+								<li>Qdrant</li>
+								<li>Azure Cognitive Search</li>
+								<li>Pinecone</li>
+								<li>Redis (redis-stack-server)</li>
+								<li>... </li>
+							</ul>
+						</li>
+
+						<li class="fragment">Relational Databases
+							<ul>
+								<li>PostgreSQL (pgvector extension)</li>
+								<li>MySQL 9.0 (VECTOR datatype)</li>
+								<li>MariaDB 11.6-vector-preview</li>
+							</ul>
+						</li>
+						<li class="fragment ">Filesystem Cache</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Alternatives to OpenAI</h2>
+					<p class="fragment"><a href="https://ollama.com/" target="_blank">Ollama</a> has 3 embedding models available (Rest API)</p>
+					<p class="fragment"><a href="https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings" target="_blank">Google Vertex-AI</a> has 2 embedding models</p>
+					<p class="fragment">Algorithm based models, like Tensorflow, Word2Vec, Bayes etc. pp.</p>
+				</section>
+
+				<section>
+					<h2>Special Thanks go to</h2>
+					<p class="fragment"><a href="https://cognitiveinheritance.com/" target="_blank">Barry Stahl</a> -  who gave me the <a href="https://introtoembeddings.azurewebsites.net/" target="_blank">insipiration and examples</a> for this talk</p>
+					<p class="fragment"><a href="https://sudhaus7.de">SUDHAUS7</a> - for letting me abuse their OpenAI Key and paying for the time to research the whole topic</p>
+					<p class="fragment"><a href="https://typo3.com" target="_blank">TYPO3 GmbH</a> - for letting me on their stage to talk about this stuff - again!</p>
+				</section>
+
+				<section>
+					<h2>What are your questions?</h2>
+				</section>
+				<section>
+					<img src="qrcode.svg"/>
+					<h3>Thank you, I am here all week</h3>
+					<p>Twitter: @FoppelFB | Mastodon: @foppel@phpc.social</p>
+
+					<p>fberger@sudhaus7.de | https://sudhaus7.de/</p>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealHighlight, RevealNotes ]
+			});
+
+		</script>
+
+	</body>
+</html>

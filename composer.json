@@ -1,0 +1,19 @@
+{
+    "autoload": {
+        "psr-4": {
+            "SUDHAUS7\\Embeddings\\": "Classes/"
+        }
+    },
+    "require": {
+        "openai-php/client": "^0.10.1",
+        "symfony/http-client": "^6.4",
+        "nyholm/psr7": "^1.8",
+        "symfony/cache": "^6.4",
+        "predis/predis": "^2.2"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
