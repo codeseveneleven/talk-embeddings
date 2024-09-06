@@ -24,7 +24,7 @@ $jobs = [
 	'Software Developer',
 	'Software Engineer',
 	'Data Entry Operator',
-	'TYPO3 Integrator',
+	'PHP Programmer',
 	'Web Developer',
 	'Web Designer',
 	'Assistant',

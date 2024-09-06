@@ -126,8 +126,13 @@ $distances = $embedding->calculateDistances(
 	$dictionary
 );
 $filtered  = array_filter( $distances, function ( $val ) {
-	return $val < 0.25;
+	return $val < 0.23;
 } );
+if (empty($filtered)) {
+	$filtered  = array_filter( $distances, function ( $val ) {
+		return $val < 0.25;
+	} );
+}
 
 print_r( $filtered );
 if ( empty( $filtered ) ) {
