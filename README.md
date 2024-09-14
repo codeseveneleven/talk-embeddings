@@ -2,6 +2,8 @@
 
 [Presented by Frank Berger at TYPO3 Developer Days 2024.](https://code711.de/talks/embeddings-the-lesser-known-hero-of-ai)
 
+[Presented by Frank Berger at the PHP Conference Serbia 2024 .](https://2024.phpsrbija.rs/talk-single/9)
+
 
 ## Embeddings
 Essentially, embeddings are points in a multi-dimensional space, represented as vectors. They encode both semantic and contextual information of a word, phrase, or text, making them highly significant in AI and language processing.
