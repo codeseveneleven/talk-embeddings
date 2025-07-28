@@ -130,7 +130,7 @@ $filtered  = array_filter( $distances, function ( $val ) {
 } );
 if (empty($filtered)) {
 	$filtered  = array_filter( $distances, function ( $val ) {
-		return $val < 0.25;
+		return $val < 0.55;
 	} );
 }
 
